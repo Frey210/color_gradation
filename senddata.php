@@ -7,9 +7,9 @@ $population_category = $_POST['population_category'];
 
 // Lakukan koneksi ke database
 $host = 'localhost';
-$database = 'u0173409_color-image';
-$user = 'u0173409_color';
-$password = 'asdjaWF@3%^8Xvdssj:.';
+$database = 'picture';
+$user = 'root';
+$password = '';
 
 try {
     $conn = new PDO("mysql:host=$host;dbname=$database", $user, $password);

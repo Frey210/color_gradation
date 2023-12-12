@@ -40,7 +40,7 @@ def get_population_category(hex_color):
     return closest_category
 
 def capture_image():
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
     ret, frame = cap.read()
 
     if ret:
@@ -49,10 +49,8 @@ def capture_image():
         return None
 
 def send_data_to_php(image_data, hex_color, population_category):
-    url = "https://aquanotes.id/color-image/senddata.php"  # Ganti dengan URL PHP yang benar
+    url = "http://localhost/images/senddata.php"  # Ganti dengan URL PHP yang benar
 
-    # Mengonversi gambar (frame) ke dalam format byte array (blob)
-    image_blob = cv2.imencode('.jpg', image_data)[1].tobytes()
     # Tambahkan teks dan pointer ke dalam gambar
     color_rgb = tuple(int(hex_color.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
     cv2.putText(image_data, hex_color, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
@@ -70,6 +68,10 @@ def send_data_to_php(image_data, hex_color, population_category):
     capture_time_text = f"Waktu Pengambilan: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     cv2.putText(image_data, capture_time_text, (10, image_data.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 
+
+    # Mengonversi gambar (frame) ke dalam format byte array (blob)
+    image_blob = cv2.imencode('.jpg', image_data)[1].tobytes()
+
     # Data yang akan dikirimkan
     payload = {
         'image_data': image_blob,
@@ -78,7 +80,7 @@ def send_data_to_php(image_data, hex_color, population_category):
     }
 
     try:
-        response = requests.post(url, data=payload)
+        response = requests.post(url, data=payload, verify=False)  # Nonaktifkan verifikasi sertifikat
 
         if response.status_code == 200:
             print("Data berhasil dikirim ke PHP.")
@@ -88,12 +90,11 @@ def send_data_to_php(image_data, hex_color, population_category):
     except requests.exceptions.RequestException as e:
         print(f"Error: {e}")
 
-
 def main():
     while True:
         try:
             # Periksa status "Take Picture" dari hosting
-            response = requests.get("https://aquanotes.id/color-image/get_command.php")  # Ganti dengan URL PHP yang benar
+            response = requests.get("http://localhost/images/get_command.php")  # Ganti dengan URL PHP yang benar
 
             if response.status_code == 200:
                 command = response.text.strip()
@@ -118,7 +119,7 @@ def main():
                         print("Gambar berhasil dikirim dan disimpan.")
                         
                         # Set status "Take Picture" kembali menjadi "false" di hosting
-                        requests.get("https://www.example.com/path/to/your/php/set_command.php?command=false")  # Ganti dengan URL PHP yang benar
+                        requests.get("http://localhost/images/get_command.php?command=false")  # Ganti dengan URL PHP yang benar
                 else:
                     print("Tidak perlu mengambil gambar.")
             else:
